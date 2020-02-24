@@ -20,6 +20,7 @@ except NameError:
 
 from nltk.corpus import brown
 from nltk.tag import map_tag, tagset_mapping
+from nltk.util import unique_list #to get self.states
 
 if map_tag('brown', 'universal', 'NR-TL') != 'NOUN':
     # Out-of-date tagset, we add a few that we need
@@ -73,10 +74,12 @@ class HMM:
 
         # TODO compute the emission model
         emission_FD = nltk.probability.ConditionalFreqDist(data)
-        self.emission_PD = nltk.probability.ConditionalProbDist(emission_FD,
-                                                                probdist_factory=nltk.probability.LidstoneProbDist,
-                                                                gamma=0.01)
-        self.states = set([tag for (tag, word) in data])
+
+        lidstone_estimator = lambda fd: nltk.probability.LidstoneProbDist(fd, 0.01, fd.B() + 1)
+
+        self.emission_PD = nltk.probability.ConditionalProbDist(emission_FD, lidstone_estimator)
+        # self.states = list(set([tag for (tag, word) in data]))
+        self.states = unique_list(tag for sent in train_data for (word,tag) in sent)
 
         return self.emission_PD, self.states
 
@@ -122,9 +125,8 @@ class HMM:
         # TODO compute the transition model
 
         transition_FD = nltk.probability.ConditionalFreqDist(tags)
-        self.transition_PD = nltk.probability.ConditionalProbDist(transition_FD,
-                                                                  probdist_factory=nltk.probability.LidstoneProbDist,
-                                                                  gamma=0.01)
+        lidstone_estimator = lambda fd: nltk.probability.LidstoneProbDist(fd, 0.01, fd.B() + 1)
+        self.transition_PD = nltk.probability.ConditionalProbDist(transition_FD,lidstone_estimator)
 
         return self.transition_PD
 
@@ -176,11 +178,11 @@ class HMM:
         for state in self.states:  # one row for each state
             self.viterbi[state] = []
             self.viterbi[state].append(- math.log(self.transition_PD['<s>'].prob(state), 2)
-                                       - math.log(self.emission_PD[state].prob(observation)), 2)
+                                       - math.log(self.emission_PD[state].prob(observation), 2))
             # Initialise step 0 of backpointer
             # TODO
             self.backpointer[state] = []
-            self.backpointer[state][0].append('<s>')
+            self.backpointer[state].append('<s>')
 
     # Tag a new sentence using the trained model and already initialised data structures.
     # Use the models stored in the variables: self.emission_PD and self.transition_PD.
@@ -202,8 +204,8 @@ class HMM:
             for s in self.states:  # fixme to iterate over states
                 # fixme to update the viterbi and backpointer data structures
                 #  Use costs, not probabilities
-                tmp_values = [self.get_viterbi_value(state, t - 1)
-                              - math.log(self.transition_PD[state].prob(s), 2)
+                tmp_values = [- self.get_viterbi_value(state, t - 1)    # flipped state and s here
+                              - math.log(self.transition_PD[s].prob(state), 2)
                               - math.log(self.emission_PD[s].prob(observations[t]))
                               for state in self.states]
 
@@ -212,22 +214,43 @@ class HMM:
 
         # TODO
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
-        best_last_tag = min([(- math.log(self.transition_PD[state].prob('</s>'), 2), state)
-                               for state in self.states], key=lambda item: item[0])[1]
 
+        for state in self.states:
+            # tmp_value = - self.get_viterbi_value(state, len(observations) - 1)
+            # - math.log(self.transition_PD['</s>'].prob(state), 2)
+            # - math.log(self.emission_PD[state].prob(observations[t]))
+
+            tmp_value = - math.log(self.transition_PD[state].prob('</s>'), 2)
+
+            self.viterbi[state].append(tmp_value)
+            self.backpointer[state].append('</s>')
+
+        # best_last_tag = min([(- math.log(self.transition_PD[state].prob('</s>'), 2), state)
+                            #    for state in self.states], key=lambda item: item[0])[1]
+        best_last_tag = min([(self.viterbi[state][len(observations)], state)
+                                for state in self.states], key=lambda item: item[0])[1]
         # TODO
         # Reconstruct the tag sequence using the backpointer list.
         # Return the tag sequence corresponding to the best path as a list.
         # The order should match that of the words in the sentence.
         tags.append(best_last_tag)
+        # print(tags)
+        # print('\n')
+        # print(observations)
+        # print('\n')
+        # print(self.backpointer)
+        # print('\n')
+        # print(self.viterbi)
+        # print('\n')
 
         for step in range(1, len(observations)):
-            tags[step] = self.get_backpointer_value(tags[step - 1], len(observations) - 1 - step + 1)  # + 1 because words count from 0
-
-        return tags.reverse()
+            tags.append(self.get_backpointer_value(tags[step - 1], len(observations) - step))
+            #print(tags)
+        tags.reverse()
+        return tags
 
     # Access function for testing the viterbi data structure
-    # For example model.get_viterbi_value('VERB',2) might be 6.42 
+    # For example model.get_viterbi_value('VERB',2) might be 6.42
     def get_viterbi_value(self, state, step):
         """
         Return the current value from self.viterbi for
@@ -270,7 +293,7 @@ def answer_question4b():
     :rtype: list(tuple(str,str)), list(tuple(str,str)), str
     :return: your answer [max 280 chars]
     """
-    raise NotImplementedError('answer_question4b')
+    # raise NotImplementedError('answer_question4b')
 
     # One sentence, i.e. a list of word/tag pairs, in two versions
     #  1) As tagged by your HMM
@@ -295,7 +318,7 @@ def answer_question5():
     :rtype: str
     :return: your answer [max 500 chars]
     """
-    raise NotImplementedError('answer_question5')
+    # raise NotImplementedError('answer_question5')
 
     return inspect.cleandoc("""\
     fill me in""")[0:500]
@@ -310,7 +333,7 @@ def answer_question6():
     :rtype: str
     :return: your answer [max 500 chars]
     """
-    raise NotImplementedError('answer_question6')
+    # raise NotImplementedError('answer_question6')
 
     return inspect.cleandoc("""\
     fill me in""")[0:500]
