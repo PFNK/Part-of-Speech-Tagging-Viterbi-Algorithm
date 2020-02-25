@@ -68,6 +68,8 @@ class HMM:
         # raise NotImplementedError('HMM.emission_model')
         # TODO prepare data
 
+        def lidstone_est(f):
+            return nltk.probability.LidstoneProbDist(f,0.01,f.B()+1)
         # Don't forget to lowercase the observation otherwise it mismatches the test data
         # Do NOT add <s> or </s> to the input sentences
         data = [(tag, word.lower()) for (word, tag) in list(itertools.chain.from_iterable(train_data))]
@@ -75,9 +77,7 @@ class HMM:
         # TODO compute the emission model
         emission_FD = nltk.probability.ConditionalFreqDist(data)
 
-        lidstone_estimator = lambda fd: nltk.probability.LidstoneProbDist(fd, 0.01, fd.B() + 1)
-
-        self.emission_PD = nltk.probability.ConditionalProbDist(emission_FD, lidstone_estimator)
+        self.emission_PD = nltk.probability.ConditionalProbDist(emission_FD, lidstone_est)
         # self.states = list(set([tag for (tag, word) in data]))
         self.states = unique_list(tag for sent in train_data for (word,tag) in sent)
 
@@ -115,6 +115,10 @@ class HMM:
         # The data object should be an array of tuples of conditions and observations,
         # in our case the tuples will be of the form (tag_(i),tag_(i+1)).
         # DON'T FORGET TO ADD THE START SYMBOL </s> and the END SYMBOL </s>
+
+        def lidstone_est(f):
+            return nltk.probability.LidstoneProbDist(f,0.01,f.B()+1)
+
         for s in train_data:
             s.insert(0, ('<s>', '<s>'))
             s.insert(len(s), ('</s>', '</s>'))
@@ -125,8 +129,7 @@ class HMM:
         # TODO compute the transition model
 
         transition_FD = nltk.probability.ConditionalFreqDist(tags)
-        lidstone_estimator = lambda fd: nltk.probability.LidstoneProbDist(fd, 0.01, fd.B() + 1)
-        self.transition_PD = nltk.probability.ConditionalProbDist(transition_FD,lidstone_estimator)
+        self.transition_PD = nltk.probability.ConditionalProbDist(transition_FD,lidstone_est)
 
         return self.transition_PD
 
@@ -200,21 +203,22 @@ class HMM:
         # raise NotImplementedError('HMM.tag')
         tags = []
 
-        for t in range(1, len(observations)):  # fixme to iterate over steps
-            for s in self.states:  # fixme to iterate over states
+        for t in range(1, len(observations)):  # fixme to iterate over steps step = word
+            for s in self.states:  # fixme to iterate over states state = tag
                 # fixme to update the viterbi and backpointer data structures
                 #  Use costs, not probabilities
-                tmp_values = [- self.get_viterbi_value(state, t - 1)    # flipped state and s here
-                              - math.log(self.transition_PD[s].prob(state), 2)
-                              - math.log(self.emission_PD[s].prob(observations[t]))
+                # here for each row (tag/state) get value on previous word and
+                # multiply with current values
+                tmp_values = [(self.get_viterbi_value(state, t - 1)
+                              - math.log(self.transition_PD[state].prob(s), 2) # prob of going from that row to curren state
+                              - math.log(self.emission_PD[s].prob(observations[t])), state)
                               for state in self.states]
-
-                self.viterbi[s].append(min(tmp_values))
-                self.backpointer[s].append(self.states[tmp_values.index(min(tmp_values))])
+                min_val = min(tmp_values, key=lambda item: item[0])
+                self.viterbi[s].append(min_val[0])
+                self.backpointer[s].append(min_val[1])
 
         # TODO
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
-
         for state in self.states:
             # tmp_value = - self.get_viterbi_value(state, len(observations) - 1)
             # - math.log(self.transition_PD['</s>'].prob(state), 2)
@@ -223,7 +227,7 @@ class HMM:
             tmp_value = - math.log(self.transition_PD[state].prob('</s>'), 2)
 
             self.viterbi[state].append(tmp_value)
-            self.backpointer[state].append('</s>')
+            # self.backpointer[state].append('</s>')
 
         # best_last_tag = min([(- math.log(self.transition_PD[state].prob('</s>'), 2), state)
                             #    for state in self.states], key=lambda item: item[0])[1]
@@ -243,8 +247,8 @@ class HMM:
         # print(self.viterbi)
         # print('\n')
 
-        for step in range(1, len(observations)):
-            tags.append(self.get_backpointer_value(tags[step - 1], len(observations) - step))
+        for step in range(len(observations)-1, 0, -1):
+            tags.append(self.get_backpointer_value(tags[len(observations) - 1 - step],step))
             #print(tags)
         tags.reverse()
         return tags
