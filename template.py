@@ -211,7 +211,7 @@ class HMM:
                 # multiply with current values
                 tmp_values = [(self.get_viterbi_value(state, t - 1)
                               - math.log(self.transition_PD[state].prob(s), 2) # prob of going from that row to curren state
-                              - math.log(self.emission_PD[s].prob(observations[t])), state)
+                              - math.log(self.emission_PD[s].prob(observations[t]), 2), state)
                               for state in self.states]
                 min_val = min(tmp_values, key=lambda item: item[0])
                 self.viterbi[s].append(min_val[0])
@@ -219,29 +219,29 @@ class HMM:
 
         # TODO
         # Add a termination step with cost based solely on cost of transition to </s> , end of sentence.
-        for state in self.states:
-            # tmp_value = - self.get_viterbi_value(state, len(observations) - 1)
-            # - math.log(self.transition_PD['</s>'].prob(state), 2)
-            # - math.log(self.emission_PD[state].prob(observations[t]))
-
-            tmp_value = - math.log(self.transition_PD[state].prob('</s>'), 2)
-
-            self.viterbi[state].append(tmp_value)
-            # self.backpointer[state].append('</s>')
-
-        # best_last_tag = min([(- math.log(self.transition_PD[state].prob('</s>'), 2), state)
-                            #    for state in self.states], key=lambda item: item[0])[1]
-        best_last_tag = min([(self.viterbi[state][len(observations)], state)
+        # for state in self.states:
+        #     # tmp_value = - self.get_viterbi_value(state, len(observations) - 1)
+        #     # - math.log(self.transition_PD['</s>'].prob(state), 2)
+        #     # - math.log(self.emission_PD[state].prob(observations[t]))
+        #
+        #     tmp_value = - math.log(self.transition_PD[state].prob('</s>'), 2)
+        #
+        #     self.viterbi[state].append(tmp_value)
+        #     # self.backpointer[state].append('</s>')
+        #
+        # # best_last_tag = min([(- math.log(self.transition_PD[state].prob('</s>'), 2), state)
+        #                     #    for state in self.states], key=lambda item: item[0])[1]
+        # best_last_tag = min([(self.viterbi[state][len(observations)], state)
+        #                         for state in self.states], key=lambda item: item[0])[1]
+        best_last_tag = min([(- math.log(self.transition_PD[state].prob('</s>'), 2) + self.get_viterbi_value(state, len(observations) -1), state)
                                 for state in self.states], key=lambda item: item[0])[1]
         # TODO
         # Reconstruct the tag sequence using the backpointer list.
         # Return the tag sequence corresponding to the best path as a list.
         # The order should match that of the words in the sentence.
         tags.append(best_last_tag)
-        # print(tags)
-        # print('\n')
-        # print(observations)
-        # print('\n')
+        print(observations)
+        print('\n')
         # print(self.backpointer)
         # print('\n')
         # print(self.viterbi)
@@ -251,6 +251,7 @@ class HMM:
             tags.append(self.get_backpointer_value(tags[len(observations) - 1 - step],step))
             #print(tags)
         tags.reverse()
+        print(tags)
         return tags
 
     # Access function for testing the viterbi data structure
