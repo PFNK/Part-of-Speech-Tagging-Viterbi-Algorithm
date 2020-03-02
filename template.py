@@ -120,16 +120,15 @@ class HMM:
         def lidstone_est(f):
             return nltk.probability.LidstoneProbDist(f,0.01,f.B()+1)
 
+        tags_words = []
+
         for s in train_data:
-            s.insert(0, ('<s>', '<s>'))
-            s.insert(len(s), ('</s>', '</s>'))
+            tags_words.append(('<s>', '<s>'))
+            tags_words.extend([(tag,word) for (word,tag) in s])
+            tags_words.append(('</s>', '</s>'))
 
-        tag_gen = (((s[i][1], s[i + 1][1]) for i in range(len(s) - 1)) for s in train_data)
-        tags = itertools.chain.from_iterable(tag_gen)
-
-        # TODO compute the transition model
-
-        transition_FD = nltk.probability.ConditionalFreqDist(tags)
+        tags = [tag for (tag,word) in tags_words]
+        transition_FD= nltk.probability.ConditionalFreqDist(nltk.bigrams(tags))
         self.transition_PD = nltk.probability.ConditionalProbDist(transition_FD,lidstone_est)
 
         return self.transition_PD
@@ -403,11 +402,11 @@ def answers():
 
         for ((word, gold), tag) in zip(sentence, tags):
             if tag == gold:
-                correct += 1  # fix me
+                correct = correct + 1  # fix me
             else:
-                incorrect += 1  # fix me
+                incorrect = incorrect + 1  # fix me
 
-    accuracy = 1. * correct/(correct + incorrect)  # fix me
+    accuracy = correct/(correct + incorrect)  # fix me
     print('Tagging accuracy for test set of %s sentences: %.4f' % (test_size, accuracy))
 
     # Print answers for 4b, 5 and 6
