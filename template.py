@@ -304,7 +304,9 @@ def answer_question5():
     # raise NotImplementedError('answer_question5')
 
     return inspect.cleandoc("""\
-    fill me in""")[0:500]
+    unseen -> emmision prob is 0 so ignore it, use only transition prob and
+    then for the tag find word with highest prob for that tag and use that one
+    - can do better because for unseen now it only put 0 but now it can produce some number""")[0:500]
 
 
 def answer_question6():
@@ -319,7 +321,8 @@ def answer_question6():
     # raise NotImplementedError('answer_question6')
 
     return inspect.cleandoc("""\
-    fill me in""")[0:500]
+    too many tags - but not many train sentences could result in possible
+    0 counts in come tags ? """)[0:500]
 
 
 # Useful for testing
