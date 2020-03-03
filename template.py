@@ -281,11 +281,11 @@ def answer_question4b():
     # One sentence, i.e. a list of word/tag pairs, in two versions
     #  1) As tagged by your HMM
     #  2) With wrong tags corrected by hand
-    tagged_sequence = 'fixme'
-    correct_sequence = 'fixme'
+    tagged_sequence = "(\"I'm\", 'PRT'), ('useless', 'ADJ'), ('for', 'ADP'), ('anything', 'NOUN'), ('but', 'CONJ'), ('racing', 'ADJ'), ('cars', 'NOUN'), ('.', '.')"
+    correct_sequence = "(\"I'm\", 'PRT'), ('useless', 'ADJ'), ('for', 'ADP'), ('anything', 'NOUN'), ('but', 'ADP'), ('racing', 'VERB'), ('cars', 'NOUN'), ('.', '.')"
     # Why do you think the tagger tagged this example incorrectly?
     answer = inspect.cleandoc("""\
-    fill me in""")[0:280]
+    AMBIGUITY - even I had a problem to to understand the meaning of this sentence""")[0:280]
 
     return tagged_sequence, correct_sequence, answer
 
@@ -394,18 +394,29 @@ def answers():
     # check the model's accuracy (% correct) using the test set
     correct = 0
     incorrect = 0
+    incorrent_sent = []
 
     for sentence in test_data_universal:
         s = [word.lower() for (word, tag) in sentence]
         model.initialise(s[0])
         tags = model.tag(s)
-
+        inc = False
         for ((word, gold), tag) in zip(sentence, tags):
             if tag == gold:
                 correct = correct + 1  # fix me
             else:
                 incorrect = incorrect + 1  # fix me
+                inc = True
+        if inc and len(incorrent_sent) < 10:
+            incorrent_sent.append((sentence,tags))
 
+    print('\nFirst 10 incorrect sentences are:')
+    for sent,tags in incorrent_sent:
+        print("Tagged test sentence:")
+        print(sent)
+        print("\nTags produced:")
+        print(tags)
+        print('\n\n')
     accuracy = correct/(correct + incorrect)  # fix me
     print('Tagging accuracy for test set of %s sentences: %.4f' % (test_size, accuracy))
 

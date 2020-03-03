@@ -1,0 +1,23 @@
+Correct:
+[('Then', 'ADJ'), ('Charlie', 'NOUN'), ('spooned', 'VERB'), ('out', 'PRT'), ('some', 'DET'), ('quick', 'ADJ'), ('impressions', 'NOUN'), ('of', 'ADP'), ('the', 'DET'), ('Nikita', 'NOUN'), ('he', 'PRON'), ('had', 'VERB'), ('glimpsed', 'VERB'), (':', '.'), ('``', '.'), ('I', 'PRON'), ('was', 'VERB'), ('captivated', 'VERB'), ('by', 'ADP'), ('his', 'DET'), ('humor', 'NOUN'), (',', '.'), ('frankness', 'NOUN'), ('and', 'CONJ'), ('good', 'ADJ'), ('nature', 'NOUN'), ('and', 'CONJ'), ('by', 'ADP'), ('his', 'DET'), ('kind', 'ADJ'), (',', '.'), ('strong', 'ADJ'), ('and', 'CONJ'), ('somewhat', 'ADV'), ('sly', 'ADJ'), ('face', 'NOUN'), ("''", '.'), ('.', '.')]
+
+Tagged:
+['ADV', 'NOUN', 'VERB', 'PRT', 'DET', 'ADJ', 'NOUN', 'ADP', 'DET', 'NOUN', 'PRON', 'VERB', 'ADV', '.', '.', 'PRON', 'VERB', 'ADV', 'ADP', 'DET', 'NOUN', '.', 'NOUN', 'CONJ', 'ADJ', 'NOUN', 'CONJ', 'ADP', 'DET', 'NOUN', '.', 'ADJ', 'CONJ', 'ADV', 'ADJ', 'NOUN', '.', '.']
+
+wrong:
+('had', 'VERB'), ('glimpsed', 'VERB'), (':', '.') -> 'VERB', 'ADV', '.'
+('was', 'VERB'), ('captivated', 'VERB'), ('by', 'ADP') -> 'VERB', 'ADV', 'ADP'
+('his', 'DET'), ('kind', 'ADJ'), (',', '.') -> 'DET', 'NOUN', '.'
+
+'verb verb' low prob - 'verb adv' was prefered 
+
+
+
+[("I'm", 'PRT'), ('useless', 'ADJ'), ('for', 'ADP'), ('anything', 'NOUN'), ('but', 'ADP'), ('racing', 'VERB'), ('cars', 'NOUN'), ('.', '.')]
+
+
+['PRT', 'ADJ', 'ADP', 'NOUN', 'CONJ', 'ADJ', 'NOUN', '.']
+
+('racing', 'VERB'), ('cars', 'NOUN') ->  'ADJ', 'NOUN'
+
+ambiguity problem - even I dont know which meaning is correct 
