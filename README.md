@@ -1,4 +1,4 @@
-# Part-of-Speech-Tagging-FNLP-CW2
+# Part of Speech Tagging - Viterbi Algorithm
 
 This assignment will make use of the Natural Language Tool Kit (NLTK) for Python. NLTK is a platform
 for writing programs to process human language data, that provides both corpora and modules. For more
