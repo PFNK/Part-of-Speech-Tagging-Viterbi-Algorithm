@@ -29,3 +29,7 @@ costs (negative log probabilities). Therefore instead of multiplication of proba
 you will do addition of costs, and instead of max and argmax you will use min and argmin.
 
 ## Section C: Short answer questions (25 Marks)
+
+
+### RESULTS: 93/100 
+7 points lost on section C open questions
